@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 
 
@@ -15,6 +16,17 @@ def build_features(data):
 
     data["Momentum_5D"] = data["Close"].pct_change(periods=5)
     data["Momentum_20D"] = data["Close"].pct_change(periods=20)
+
+    # Calendar / seasonality features
+    data["Day_of_Year"] = data.index.dayofyear
+
+    data["Season_Sin"] = np.sin(
+        2 * np.pi * data["Day_of_Year"] / 365.25
+    )
+
+    data["Season_Cos"] = np.cos(
+        2 * np.pi * data["Day_of_Year"] / 365.25
+    )
 
     # Future 3-day return
     data["Future_Return_3D"] = (
