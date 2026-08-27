@@ -1,5 +1,5 @@
 import pandas as pd
-
+from build_storage_features import build_storage_features
 
 def merge_market_and_storage():
     market = pd.read_csv(
@@ -17,6 +17,7 @@ def merge_market_and_storage():
             "Available_Date"
         ]
     )
+    storage = build_storage_features(storage)
 
     market = market.reset_index()
 

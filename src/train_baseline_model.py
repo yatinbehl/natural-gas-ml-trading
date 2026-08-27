@@ -7,27 +7,34 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, classification_report
 
 from build_features import build_features
+from merge_market_storage import merge_market_and_storage
 
-
-FEATURES = [
+TECHNICAL_FEATURES = [
     "Daily_Return",
     "Volatility_20D",
     "Momentum_5D",
     "Momentum_20D",
 ]
 
+STORAGE_FEATURES = [
+    "Weekly_Change_Bcf",
+    "Storage_vs_5Y_Avg_Pct",
+    "Storage_Surplus_Change",
+]
 
-def load_model_data():
-    data = pd.read_csv(
-        "data/ng_futures.csv",
-        index_col="Date",
-        parse_dates=True
-    )
+FEATURES = TECHNICAL_FEATURES
+
+def load_model_data(features=FEATURES):
+
+    data = merge_market_and_storage()
+
+    data = data.set_index("Date")
+
 
     data = build_features(data)
 
     model_data = data[
-        FEATURES + ["Target_3D"]
+        features + ["Target_3D"]
     ].dropna()
 
     return model_data
