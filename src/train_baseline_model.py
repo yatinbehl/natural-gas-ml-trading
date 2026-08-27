@@ -7,7 +7,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, classification_report
 
 from build_features import build_features
-from merge_market_storage import merge_market_and_storage
+from merge_all_data import merge_all_data
 
 TECHNICAL_FEATURES = [
     "Daily_Return",
@@ -22,11 +22,19 @@ STORAGE_FEATURES = [
     "Storage_Surplus_Change",
 ]
 
+WEATHER_FEATURES = [
+    "HDD_1D_Lag",
+    "CDD_1D_Lag",
+    "HDD_7D_Avg",
+    "CDD_7D_Avg",
+]
+
+
 FEATURES = TECHNICAL_FEATURES
 
 def load_model_data(features=FEATURES):
 
-    data = merge_market_and_storage()
+    data = merge_all_data()
 
     data = data.set_index("Date")
 

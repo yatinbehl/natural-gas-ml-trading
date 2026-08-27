@@ -8,9 +8,9 @@ from sklearn.preprocessing import StandardScaler
 from train_baseline_model import (
     TECHNICAL_FEATURES,
     STORAGE_FEATURES,
+    WEATHER_FEATURES,
     load_model_data,
 )
-
 
 def make_model():
     return Pipeline([
@@ -56,8 +56,18 @@ if __name__ == "__main__":
         TECHNICAL_FEATURES + STORAGE_FEATURES
     )
 
+    all_features = (
+        TECHNICAL_FEATURES
+        + STORAGE_FEATURES
+        + WEATHER_FEATURES
+    )
+
     combined_results = walk_forward_accuracy(
         combined_features
+    )
+
+    weather_results = walk_forward_accuracy(
+        all_features
     )
 
     comparison = technical_results.rename(
@@ -68,6 +78,10 @@ if __name__ == "__main__":
         combined_results["Accuracy"]
     )
 
+    comparison["Technical_Storage_Weather"] = (
+        weather_results["Accuracy"]
+    )
+
     print(comparison)
 
     print("\nTechnical average:")
@@ -76,5 +90,9 @@ if __name__ == "__main__":
     print("\nTechnical + Storage average:")
     print(
         comparison["Technical_Plus_Storage"].mean()
+    )
+    print("\nTechnical + Storage + Weather average:")
+    print(
+        comparison["Technical_Storage_Weather"].mean()
     )
 
