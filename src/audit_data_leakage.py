@@ -184,53 +184,70 @@ def audit_weather(data):
     print("4. REALIZED WEATHER CHECK")
     print("=" * 70)
 
-    required_columns = [
-        "HDD",
-        "CDD",
-        "HDD_1D_Lag",
-        "CDD_1D_Lag",
-        "HDD_7D_Avg",
-        "CDD_7D_Avg",
-    ]
+    weather = pd.read_csv(
+        "data/ng_weather_daily.csv",
+        parse_dates=["Date"]
+    )
 
-    missing_columns = [
-        column
-        for column in required_columns
-        if column not in data.columns
-    ]
+    weather = weather.sort_values(
+        "Date"
+    ).set_index(
+        "Date"
+    )
 
-    if missing_columns:
-        print(
-            "Could not fully audit realized weather."
-        )
-        print(
-            "Missing columns:"
-        )
-        print(
-            missing_columns
-        )
-        return
-
-    # ----------------------------------------
-    # Check 1-day lags
-    # ----------------------------------------
-
+    # Expected values using ONLY prior-day information
     expected_hdd_lag = (
-        data["HDD"].shift(1)
+        weather["HDD"].shift(1)
     )
 
     expected_cdd_lag = (
-        data["CDD"].shift(1)
+        weather["CDD"].shift(1)
+    )
+
+    expected_hdd_7d = (
+        weather["HDD"]
+        .shift(1)
+        .rolling(7)
+        .mean()
+    )
+
+    expected_cdd_7d = (
+        weather["CDD"]
+        .shift(1)
+        .rolling(7)
+        .mean()
+    )
+
+    expected = pd.DataFrame({
+        "Expected_HDD_1D_Lag": expected_hdd_lag,
+        "Expected_CDD_1D_Lag": expected_cdd_lag,
+        "Expected_HDD_7D_Avg": expected_hdd_7d,
+        "Expected_CDD_7D_Avg": expected_cdd_7d,
+    })
+
+    audit_data = data.join(
+        expected,
+        how="left"
     )
 
     hdd_lag_diff = (
-        data["HDD_1D_Lag"]
-        - expected_hdd_lag
+        audit_data["HDD_1D_Lag"]
+        - audit_data["Expected_HDD_1D_Lag"]
     ).abs()
 
     cdd_lag_diff = (
-        data["CDD_1D_Lag"]
-        - expected_cdd_lag
+        audit_data["CDD_1D_Lag"]
+        - audit_data["Expected_CDD_1D_Lag"]
+    ).abs()
+
+    hdd_7d_diff = (
+        audit_data["HDD_7D_Avg"]
+        - audit_data["Expected_HDD_7D_Avg"]
+    ).abs()
+
+    cdd_7d_diff = (
+        audit_data["CDD_7D_Avg"]
+        - audit_data["Expected_CDD_7D_Avg"]
     ).abs()
 
     print(
@@ -246,37 +263,6 @@ def audit_weather(data):
     print(
         cdd_lag_diff.max()
     )
-
-    # ----------------------------------------
-    # Check 7-day averages
-    #
-    # These should use ONLY data available
-    # before the market date.
-    # ----------------------------------------
-
-    expected_hdd_7d = (
-        data["HDD"]
-        .shift(1)
-        .rolling(7)
-        .mean()
-    )
-
-    expected_cdd_7d = (
-        data["CDD"]
-        .shift(1)
-        .rolling(7)
-        .mean()
-    )
-
-    hdd_7d_diff = (
-        data["HDD_7D_Avg"]
-        - expected_hdd_7d
-    ).abs()
-
-    cdd_7d_diff = (
-        data["CDD_7D_Avg"]
-        - expected_cdd_7d
-    ).abs()
 
     print(
         "\nMaximum HDD 7-day average difference:"
@@ -296,23 +282,20 @@ def audit_weather(data):
         "\nRecent realized weather audit sample:"
     )
 
-    sample = pd.DataFrame({
-        "HDD": data["HDD"],
-        "HDD_1D_Lag": data["HDD_1D_Lag"],
-        "Expected_HDD_1D_Lag": expected_hdd_lag,
-        "HDD_7D_Avg": data["HDD_7D_Avg"],
-        "Expected_HDD_7D_Avg": expected_hdd_7d,
-        "CDD": data["CDD"],
-        "CDD_1D_Lag": data["CDD_1D_Lag"],
-        "Expected_CDD_1D_Lag": expected_cdd_lag,
-        "CDD_7D_Avg": data["CDD_7D_Avg"],
-        "Expected_CDD_7D_Avg": expected_cdd_7d,
-    })
-
     print(
-        sample.tail(10)
+        audit_data[
+            [
+                "HDD_1D_Lag",
+                "Expected_HDD_1D_Lag",
+                "CDD_1D_Lag",
+                "Expected_CDD_1D_Lag",
+                "HDD_7D_Avg",
+                "Expected_HDD_7D_Avg",
+                "CDD_7D_Avg",
+                "Expected_CDD_7D_Avg",
+            ]
+        ].tail(10)
     )
-
 def audit_target(data):
     print("\n" + "=" * 70)
     print("5. TARGET CONSTRUCTION CHECK")
