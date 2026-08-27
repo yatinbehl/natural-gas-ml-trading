@@ -29,6 +29,13 @@ WEATHER_FEATURES = [
     "CDD_7D_Avg",
 ]
 
+FORECAST_WEATHER_FEATURES = [
+    "Forecast_HDD_7D",
+    "Forecast_CDD_7D",
+    "HDD_7D_Outlook_Change",
+    "CDD_7D_Outlook_Change",
+]
+
 
 FEATURES = TECHNICAL_FEATURES
 
